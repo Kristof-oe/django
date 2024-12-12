@@ -1,0 +1,34 @@
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: django-ingress
+  annotations:
+    nginx.ingress.kubernetes.io/rewrite-target: /
+spec:
+  rules:
+    - host: frontend.weather.com
+      http:
+        paths:
+          - path: /update/
+            pathType: Prefix
+            backend:
+              service:
+                name: django
+                port:
+                  number: 8000
+
+          - path: /get/
+            pathType: Prefix
+            backend:
+              service:
+                name: django
+                port:
+                  number: 8000
+
+          - path: /json/
+            pathType: Prefix
+            backend:
+              service:
+                name: django
+                port:
+                  number: 8000

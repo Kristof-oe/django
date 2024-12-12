@@ -1,0 +1,67 @@
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: postgres-volume
+spec:
+  accessModes:
+    - ReadWriteOnce
+  resources:
+    requests:
+      storage: 1Gi
+
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: postdeployment
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: Database
+  template:
+    metadata:
+      labels:
+        app: Database
+    spec:
+      volumes:
+        - name: post-data
+          persistentVolumeClaim:
+            claimName: postgres-volume
+      containers:
+        - name: postgresweather
+          image: postgres:15
+          ports:
+            - containerPort: 5432
+          volumeMounts:
+            - name: post-data
+              mountPath: /var/lib/postgresql/data
+              subPath: post
+          env:
+            - name: POSTGRES_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: app-secret
+                  key: POSTGRES_PASSWORD
+            - name: POSTGRES_USER
+              valueFrom:
+                configMapKeyRef:
+                  name: app-variable
+                  key: POSTGRES_USER
+            - name: POSTGRES_DB
+              valueFrom:
+                configMapKeyRef:
+                  name: app-variable
+                  key: POSTGRES_DB
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: db
+spec:
+  type: ClusterIP
+  selector:
+    app: Database
+  ports:
+    - port: 5432
+      targetPort: 5432
